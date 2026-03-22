@@ -7,10 +7,9 @@
 <script setup lang="ts">
 import BasicLayout from '@/layouts/BasicLayout.vue'
 import { healthUsingGet } from '@/api/mainController.ts'
+
 const res = healthUsingGet()
-console.log(res);
+console.log(res)
 </script>
 
-
-<style scoped>
-</style>
+<style scoped></style>

@@ -10,10 +10,18 @@
       <a-tab-pane key="2" tab="url上传" force-render>
         <UrlPictureUpload :picture="picture" :space-id="spaceId" :on-success="uploadHandle" />
       </a-tab-pane>
-      <a-tab-pane key="3" tab="待开发">
-        xxx
-      </a-tab-pane>
+      <a-tab-pane key="3" tab="待开发"> xxx</a-tab-pane>
     </a-tabs>
+    <div v-if="picture" class="edit-bar">
+      <a-button :icon="h(EditOutlined)" @click="doEditPicture">编辑图片</a-button>
+      <ImageCropper
+        ref="imageCropperRef"
+        :imageUrl="picture.url"
+        :picture="picture"
+        :spaceId="spaceId"
+        :onSuccess="onCropSuccess"
+      />
+    </div>
     <a-form v-if="picture" :model="pictureForm" layout="vertical" @finish="submitHandle">
       <a-form-item label="名称" name="name">
         <a-input v-model:value="pictureForm.name" placeholder="名称" :allow-clear="true" />
@@ -53,7 +61,7 @@
 
 <script setup lang="ts">
 import PictureUpload from '@/components/PictureUpload.vue'
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, h, onMounted, reactive, ref } from 'vue'
 import {
   editPictureUsingPut,
   getPictureVoByIdUsingGet,
@@ -62,17 +70,19 @@ import {
 import { message } from 'ant-design-vue'
 import { useRoute, useRouter } from 'vue-router'
 import UrlPictureUpload from '@/components/UrlPictureUpload.vue'
+import { EditOutlined } from '@ant-design/icons-vue'
+import ImageCropper from '@/components/ImageCropper.vue'
 
 const picture = ref<API.PictureVO>()
 // 真SB还必须写成对象类型
 const pictureForm = reactive<API.PictureEditRequest>({})
 
-const active = ref<string>('1');
+const active = ref<string>('1')
 
 // todo 获取到 spaceId 传递给图片上传组件
-const route = useRoute();
+const route = useRoute()
 const spaceId = computed(() => {
-  return route.query?.spaceId;
+  return route.query?.spaceId
 })
 
 /**
@@ -141,7 +151,7 @@ onMounted(async () => {
 // console.log(route.query.id)
 const getOldPicture = async () => {
   // 是否要将旧页面加载出来，判断是不是更新页面，判断是否有id
-  const id = route.query?.id;    // 修改图片之前需要获取旧图片信息
+  const id = route.query?.id // 修改图片之前需要获取旧图片信息
   if (!id) {
     return
   }
@@ -159,11 +169,33 @@ onMounted(() => {
   getOldPicture()
 })
 
+/**
+ * 新增图片编辑
+ */
+// 图片编辑弹窗引用
+const imageCropperRef = ref()
+
+// 编辑图片
+const doEditPicture = () => {
+  if (imageCropperRef.value) {
+    imageCropperRef.value.openModal()
+  }
+}
+
+// 编辑成功事件
+const onCropSuccess = (newPicture: API.PictureVO) => {
+  picture.value = newPicture
+}
 </script>
 
 <style scoped>
 #add-picture {
   max-width: 720px;
   margin: 0 auto;
+}
+
+#add-picture .edit-bar {
+  text-align: center;
+  margin: 16px 0;
 }
 </style>
