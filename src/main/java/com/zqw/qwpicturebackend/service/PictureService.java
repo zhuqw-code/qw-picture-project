@@ -2,6 +2,7 @@ package com.zqw.qwpicturebackend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.zqw.qwpicturebackend.api.aliyunai.model.CreateOutPaintingTaskResponse;
 import com.zqw.qwpicturebackend.model.dto.file.UploadPictureResult;
 import com.zqw.qwpicturebackend.model.dto.picture.*;
 import com.zqw.qwpicturebackend.model.entity.Picture;
@@ -133,4 +134,12 @@ public interface PictureService extends IService<Picture> {
      * @return 返回查询到的图片信息
      */
     List<PictureVO> searchPictureByColor(Long spaceId, String picColor, User loginUser);
+
+    /**
+     * 扩图接口
+     * @param createPictureOutPaintingTaskRequest
+     * @param loginUser
+     * @return
+     */
+    CreateOutPaintingTaskResponse createPictureOutPaintingTask(CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, User loginUser);
 }

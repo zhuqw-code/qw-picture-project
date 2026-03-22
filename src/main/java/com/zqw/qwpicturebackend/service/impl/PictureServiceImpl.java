@@ -1,5 +1,6 @@
 package com.zqw.qwpicturebackend.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -10,7 +11,9 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zqw.qwpicturebackend.Utils.ColorSimilarUtils;
-import com.zqw.qwpicturebackend.constant.UserConstant;
+import com.zqw.qwpicturebackend.api.aliyunai.api.AliYunAiApi;
+import com.zqw.qwpicturebackend.api.aliyunai.model.CreateOutPaintingTaskRequest;
+import com.zqw.qwpicturebackend.api.aliyunai.model.CreateOutPaintingTaskResponse;
 import com.zqw.qwpicturebackend.exception.BusinessException;
 import com.zqw.qwpicturebackend.exception.ErrorCode;
 import com.zqw.qwpicturebackend.exception.ThrowUtils;
@@ -36,12 +39,14 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.awt.*;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -76,6 +81,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     private TransactionTemplate transactionTemplate;
 
     private static final String PUBLIC_SPACE = "public";
+    @Autowired
+    private AliYunAiApi aliYunAiApi;
 
 
     /**
@@ -182,7 +189,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         this.fillReviewParams(picture, loginUser);
         // 给图片设置空间 id
         picture.setSpaceId(spaceId);
-
+        picture.setEditTime(new Date());
         // 7.加入到数据库中
         // 会根据是否有id进行存储
         // 只要是修改数据库操作就要 开启事务
@@ -702,6 +709,25 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
                 }))
                 .limit(12)      // 最多取最相似的12张
                 .map(PictureVO::objToVo).collect(Collectors.toList());
+    }
+
+
+    @Override
+    public CreateOutPaintingTaskResponse createPictureOutPaintingTask(CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, User loginUser) {
+        // 获取图片信息
+        Long pictureId = createPictureOutPaintingTaskRequest.getPictureId();
+        Picture picture = Optional.ofNullable(this.getById(pictureId))
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_ERROR));
+        // 权限校验
+        checkPictureAuth(picture, loginUser);
+        // 构造请求参数
+        CreateOutPaintingTaskRequest taskRequest = new CreateOutPaintingTaskRequest();
+        CreateOutPaintingTaskRequest.Input input = new CreateOutPaintingTaskRequest.Input();
+        input.setImageUrl(picture.getUrl());
+        taskRequest.setInput(input);
+        BeanUtil.copyProperties(createPictureOutPaintingTaskRequest, taskRequest);
+        // 创建任务
+        return aliYunAiApi.createOutPaintingTask(taskRequest);
     }
 }
 
