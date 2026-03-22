@@ -1,0 +1,87 @@
+create database if not exists qw_picture default character set utf8mb4 collate utf8mb4_unicode_ci;
+
+use qw_picture;
+
+-- 用户表
+create table if not exists user
+(
+    id           bigint auto_increment comment 'id' primary key,
+    userAccount  varchar(256)                           not null comment '账号',
+    userPassword varchar(512)                           not null comment '密码',
+    userName     varchar(256)                           null comment '用户昵称',
+    userAvatar   varchar(1024)                          null comment '用户头像',
+    userProfile  varchar(512)                           null comment '用户简介',
+    userRole     varchar(256) default 'user'            not null comment '用户角色：user/admin',
+    editTime     datetime     default CURRENT_TIMESTAMP not null comment '编辑时间',
+    -- 编辑时间是指用户正常发送请求信息修改的时间
+    createTime   datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime   datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    -- 修改时间是指直接对表进行修改会触发该字段的修改
+    isDelete     tinyint      default 0                 not null comment '是否删除',
+    UNIQUE KEY uk_userAccount (userAccount),
+    INDEX idx_userName (userName)
+) comment '用户' collate = utf8mb4_unicode_ci;
+
+
+-- 图片表
+create table picture
+(
+    id            bigint auto_increment comment 'id'
+        primary key,
+    url           varchar(512)                       not null comment '图片 url',
+    name          varchar(128)                       not null comment '图片名称',
+    introduction  varchar(512)                       null comment '简介',
+    category      varchar(64)                        null comment '分类',
+    tags          varchar(512)                       null comment '标签（JSON 数组）',
+    picSize       bigint                             null comment '图片体积',
+    picWidth      int                                null comment '图片宽度',
+    picHeight     int                                null comment '图片高度',
+    picScale      double                             null comment '图片宽高比例',
+    picFormat     varchar(32)                        null comment '图片格式',
+    userId        bigint                             not null comment '创建用户 id',
+    createTime    datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    editTime      datetime default CURRENT_TIMESTAMP not null comment '编辑时间',
+    updateTime    datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    isDelete      tinyint  default 0                 not null comment '是否删除',
+    reviewStatus  int      default 0                 not null comment '审核状态：0-待审核; 1-通过; 2-拒绝',
+    reviewMessage varchar(512)                       null comment '审核信息',
+    reviewerId    bigint                             null comment '审核人 ID',
+    reviewTime    datetime                           null comment '审核时间'
+)
+    comment '图片' collate = utf8mb4_unicode_ci;
+
+create index idx_category
+    on picture (category);
+
+create index idx_introduction
+    on picture (introduction);
+
+create index idx_name
+    on picture (name);
+
+create index idx_reviewStatus
+    on picture (reviewStatus);
+
+create index idx_tags
+    on picture (tags);
+
+create index idx_userId
+    on picture (userId);
+
+use qw_picture;
+
+ALTER TABLE picture
+    -- 添加新列
+    ADD COLUMN reviewStatus  INT DEFAULT 0 NOT NULL COMMENT '审核状态：0-待审核; 1-通过; 2-拒绝',
+    ADD COLUMN reviewMessage VARCHAR(512)  NULL COMMENT '审核信息',
+    ADD COLUMN reviewerId    BIGINT        NULL COMMENT '审核人 ID',
+    ADD COLUMN reviewTime    DATETIME      NULL COMMENT '审核时间';
+
+-- 创建基于 reviewStatus 列的索引
+CREATE INDEX idx_reviewStatus ON picture (reviewStatus);
+
+-- 为图片表添加图片主色调
+use qw_picture;
+
+ALTER TABLE picture
+    ADD COLUMN picColor varchar(16) null comment '图片主色调';

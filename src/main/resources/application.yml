@@ -1,0 +1,75 @@
+# 配置项目默认参数，端口号，添加上下文
+server:
+  port: 8123
+  servlet:
+    context-path: /api
+    session:
+      cookie:
+        max-age: 2592000
+
+spring:
+  application:
+    name: qw-picture-backend
+  profiles:
+    active: local
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/qw_picture
+    username: root
+    password: hsp
+  # 设置单词上传文件的最大内存
+  servlet:
+    multipart:
+      max-file-size: 10MB
+  # redis 配置
+  redis:
+    database: 3
+#    host: 192.168.100.128
+    host: localhost
+    port: 6379
+    timeout: 5000
+#    password: 123321
+    # redis 配置
+  #  redis:
+  #    database: 3
+  #    host: 127.0.0.1
+  #    port: 6379
+  #    timeout: 5000
+  #    password: 123456
+  # session 存储在 redis中
+  session:
+    store-type: redis
+    timeout: 2592000     # 设置30天
+
+cos:
+  client:
+    host: ${cos.client.host}
+    secretId: ${cos.client.secretId}
+    secretKey: ${cos.client.secretKey}
+    region: ${cos.client.region}
+    bucket: ${cos.client.bucket}
+
+# MyBatis 配置
+mybatis-plus:
+  configuration:
+    # 是否开启驼峰形式
+    map-underscore-to-camel-case: false
+    # 仅在开发时打印日志
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    # 逻辑删除e
+  global-config:
+    db-config:
+      logic-delete-field: isDelete
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+# 设置接口文档
+knife4j:
+  enable: true
+  openapi:
+    title: 接口文档
+    version: 1.0
+    group:
+      default:
+        api-rule: package
+        api-rule-resources:
+          - com.zqw.qwpicturebackend.controller
