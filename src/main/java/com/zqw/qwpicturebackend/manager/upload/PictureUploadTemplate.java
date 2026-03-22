@@ -2,6 +2,7 @@ package com.zqw.qwpicturebackend.manager.upload;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.file.FileNameUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpResponse;
@@ -104,8 +105,8 @@ public abstract class PictureUploadTemplate {
         if (idx > -1) {
             originalFilename = originalFilename.substring(0, idx);
         }
-        String filename = String.format("%s_%s.%s", LocalDate.now(), uuid, originalFilename);
-        String uploadPath = String.format("/%s/%s", uploadPathPrefix, filename);
+        String filename = String.format("%s_%s_%s", LocalDate.now(), uuid, originalFilename);
+        String uploadPath = String.format("%s/%s", uploadPathPrefix, filename);
         // 文件上传（先写在内存中，在调用 CosManager 的putPictureObject 方法上传）
         File file = null;
         try {

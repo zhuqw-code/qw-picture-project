@@ -2,6 +2,7 @@ package com.zqw.qwpicturebackend.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -9,6 +10,7 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zqw.qwpicturebackend.Utils.ColorSimilarUtils;
+import com.zqw.qwpicturebackend.constant.UserConstant;
 import com.zqw.qwpicturebackend.exception.BusinessException;
 import com.zqw.qwpicturebackend.exception.ErrorCode;
 import com.zqw.qwpicturebackend.exception.ThrowUtils;
@@ -552,21 +554,26 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
         // 只要是修改数据库操作就要 开启事务
         transactionTemplate.execute(status -> {
+            // 无论如何都要删除
             boolean isDelete = this.removeById(picId);
             ThrowUtils.throwif(!isDelete, ErrorCode.OPERATION_ERROR, "无法删除该图片~");
             // 更新空间使用额度
-            // 确保 picSize 是数字类型（Long/Integer），避免注入
-            Long picSize = picture.getPicSize();
+            // 如果没有关联空间就没有必要更新额度了
             Long spaceId = picture.getSpaceId();
-            ThrowUtils.throwif(spaceId == null, ErrorCode.OPERATION_ERROR, "当前图片没有归属的空间");
-            boolean update = spaceService.lambdaUpdate()
-                    .eq(Space::getId, picture.getSpaceId())
-                    .setSql("totalSize = totalSize - " + picSize)
-                    .setSql("totalCount = totalCount - " + 1)
-                    // 注意：这里的逗号很重要，且必须确保 picSize 是数值类型防止注入
-                    // .apply("totalSize = totalSize - " + picture.getPicSize() + ", totalCount = totalCount - 1")
-                    .update();
-            ThrowUtils.throwif(!update, ErrorCode.OPERATION_ERROR, "额度更新失败");
+            // 确保 picSize 是数字类型（Long/Integer），避免注入
+            if (ObjectUtil.isNotEmpty(spaceId)) {
+                Long picSize = picture.getPicSize();
+                // 对于spaceId为空的情况，在公共图库，管理员是又权限删除的
+                // ThrowUtils.throwif(spaceId == null, ErrorCode.OPERATION_ERROR, "当前图片没有归属的空间");
+                boolean update = spaceService.lambdaUpdate()
+                        .eq(Space::getId, picture.getSpaceId())
+                        .setSql("totalSize = totalSize - " + picSize)
+                        .setSql("totalCount = totalCount - " + 1)
+                        // 注意：这里的逗号很重要，且必须确保 picSize 是数值类型防止注入
+                        // .apply("totalSize = totalSize - " + picture.getPicSize() + ", totalCount = totalCount - 1")
+                        .update();
+                ThrowUtils.throwif(!update, ErrorCode.OPERATION_ERROR, "额度更新失败");
+            }
             return true;
         });
         // 清理 Cos 文件

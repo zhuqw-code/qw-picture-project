@@ -1,6 +1,7 @@
 package com.zqw.qwpicturebackend.manager.upload;
 
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.file.FileNameUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpStatus;
@@ -84,7 +85,7 @@ public class UrlPictureUpload extends PictureUploadTemplate {
     @Override
     public String getOriginFilename(Object inputResource) {
         String url = (String) inputResource;
-        return FileUtil.mainName(url);
+        return FileUtil.mainName(url) + "." + FileNameUtil.getSuffix(url);
     }
 
     /**
