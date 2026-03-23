@@ -4,6 +4,15 @@
     <a-flex justify="space-between">
       <h2>{{ space.spaceName }}（私有空间）</h2>
       <a-space>
+        <a-button
+          type="primary"
+          ghost
+          :icon="h(BarChartOutlined)"
+          :href="`/space/analyze?spaceId=${spaceId}`"
+          target="_blank"
+        >
+          空间分析
+        </a-button>
         <a-button type="primary" :href="`/add_picture?spaceId=${spaceId}`"> +创建图片</a-button>
         <a-tooltip :title="`占用空间${formatSize(space.totalSize)} / ${formatSize(space.maxSize)}`">
           <a-progress
@@ -35,12 +44,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { h, onMounted, reactive, ref } from 'vue'
 import {
   listPictureVoByPageUsingPost,
   searchPictureByColorUsingPost,
 } from '@/api/pictureController.ts'
 import { message } from 'ant-design-vue'
+import { BarChartOutlined } from '@ant-design/icons-vue'
 import PictureList from '@/components/PictureList.vue'
 import { getSpaceVoByIdUsingGet } from '@/api/spaceController.ts'
 import { formatSize } from '@/utils/tools.ts'

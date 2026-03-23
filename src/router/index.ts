@@ -22,6 +22,11 @@ const router = createRouter({
       component: () => import("@/pages/user/UserLoginPage.vue"),
     },
     {
+      path: '/user/center',
+      name: '个人中心',
+      component: () => import('@/pages/user/UserCenterPage.vue'),
+    },
+    {
       path: '/user/register',
       name: '用户注册页',
       component: () => import("@/pages/user/UserRegisterPage.vue"),
@@ -61,6 +66,12 @@ const router = createRouter({
       path: '/space/:spaceId',
       name: '空间内容展示',
       component: () => import("@/pages/SpaceDetailPage.vue"),
+      props: true,
+    },
+    {
+      path: '/space/analyze',
+      name: '空间分析展示',
+      component: () => import("@/pages/SpaceAnalyzePage.vue"),
       props: true,
     },
     {

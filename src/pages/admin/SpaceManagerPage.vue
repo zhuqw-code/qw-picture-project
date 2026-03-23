@@ -53,9 +53,9 @@
         </template>
         <template v-else-if="column.dataIndex === 'userInfo'">
           <a-space direction="vertical">
-            <a-tag color="blue"> 昵称 ：{{ record.user.userName }}</a-tag>
-            <a-tag color="blueViolet"> 角色 ：{{ record.user.userRole }}</a-tag>
-            <a-tag color="pink"> 账号：{{ record.user.userAccount }}</a-tag>
+            <a-tag color="blue"> 昵称 ：{{ record.user?.userName }}</a-tag>
+            <a-tag color="blueViolet"> 角色 ：{{ record.user?.userRole }}</a-tag>
+            <a-tag color="pink"> 账号：  `{{ record.user?.userAccount }}</a-tag>
           </a-space>
         </template>
         <template v-else-if="column.dataIndex === 'createTime'">

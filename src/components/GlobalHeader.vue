@@ -19,12 +19,16 @@
       <a-col flex="160px">
         <div id="user-login-status">
           <div v-if="loginUserStore.loginUser?.id">
-            <a-dropdown placement="bottom">
+            <a-dropdown placement="bottom" trigger="hover">
               <a-space>
-                <a-avatar :size="48" :src="loginUserStore.loginUser.userAvatar" />
+                <a-avatar :size="48" :src="loginUserStore.loginUser.userAvatar ?? 'https://qw-1346071538.cos.ap-nanjing.myqcloud.com///space/6/2025-11-16_7692c8d1-13c6-4bf7-964b-013496d4b7d4.b8.png'" />
               </a-space>
               <template #overlay>
                 <a-menu>
+                  <a-menu-item @click="goUserCenter">
+                    <UserOutlined />
+                    个人中心
+                  </a-menu-item>
                   <a-menu-item @click="userLogout">
                     <MinusCircleTwoTone />
                     退出登录
@@ -50,7 +54,7 @@ import {
   AuditOutlined,
   PhoneOutlined,
   QuestionCircleOutlined,
-  PlusOutlined
+  PlusOutlined, BarChartOutlined, UserOutlined
 } from '@ant-design/icons-vue'
 import { type MenuProps, message } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
@@ -148,6 +152,15 @@ const userLogout = async () => {
   else {
     message.error("退出失败：" + res.data.message);
   }
+}
+
+// 进入个人中心
+const goUserCenter = async () => {
+  if (!loginUserStore.loginUser?.id) {
+    await router.push({ path: '/user/login', replace: true })
+    return
+  }
+  await router.push({ path: '/user/center' })
 }
 
 
