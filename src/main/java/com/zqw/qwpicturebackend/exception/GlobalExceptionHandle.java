@@ -1,5 +1,7 @@
 package com.zqw.qwpicturebackend.exception;
 
+import cn.dev33.satoken.exception.NotLoginException;
+import cn.dev33.satoken.exception.NotPermissionException;
 import com.zqw.qwpicturebackend.common.BaseResult;
 import com.zqw.qwpicturebackend.common.ResultUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +16,19 @@ import java.io.Serializable;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandle {  // 不需要序列化？
+
+    @ExceptionHandler(NotLoginException.class)
+    public BaseResult<?> notLoginException(NotLoginException e) {
+        log.error("NotLoginException", e);
+        return ResultUtils.error(ErrorCode.NOT_LOGIN_ERROR, e.getMessage());
+    }
+
+    @ExceptionHandler(NotPermissionException.class)
+    public BaseResult<?> notPermissionExceptionHandler(NotPermissionException e) {
+        log.error("NotPermissionException", e);
+        return ResultUtils.error(ErrorCode.NO_AUTH_ERROR, e.getMessage());
+    }
+
 
     /**
      * 处理系统异常

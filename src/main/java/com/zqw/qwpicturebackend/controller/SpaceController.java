@@ -4,6 +4,7 @@ import cn.hutool.core.util.ObjUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.zqw.qwpicturebackend.annotation.AuthCheck;
+import com.zqw.qwpicturebackend.auth.SpaceUserAuthManager;
 import com.zqw.qwpicturebackend.common.BaseResult;
 import com.zqw.qwpicturebackend.common.DeleteRequest;
 import com.zqw.qwpicturebackend.common.ResultUtils;
@@ -22,6 +23,7 @@ import com.zqw.qwpicturebackend.service.SpaceService;
 import com.zqw.qwpicturebackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -41,6 +43,8 @@ public class SpaceController {
 
     @Resource
     private SpaceService spaceService;
+    @Autowired
+    private SpaceUserAuthManager spaceUserAuthManager;
 
     /**
      * 删除空间【管理员+空间归属者】
@@ -190,6 +194,7 @@ public class SpaceController {
         SpaceVO spaceVO = SpaceVO.objToVo(space);
         // 添加冗余属性
         spaceVO.setUser(userService.getUserVO(loginUser));
+        spaceVO.setPermissionList(spaceUserAuthManager.getPermissionList(space, loginUser));
         return ResultUtils.success(spaceVO);
     }
 

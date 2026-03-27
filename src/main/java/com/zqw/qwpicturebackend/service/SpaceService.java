@@ -69,4 +69,11 @@ public interface SpaceService extends IService<Space> {
      */
     long addSpace(SpaceAddRequest spaceAddRequest, User loginUser);
 
+    /**
+     * 根据id删除空间
+     *
+     * @param space     需要删除的空间
+     * @param loginUser 当前登录用户
+     */
+    void checkSpaceAuth(Space space, User loginUser);
 }

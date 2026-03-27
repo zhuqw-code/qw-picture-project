@@ -4,6 +4,7 @@ import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.zqw.qwpicturebackend.auth.StpKit;
 import com.zqw.qwpicturebackend.exception.BusinessException;
 import com.zqw.qwpicturebackend.exception.ErrorCode;
 import com.zqw.qwpicturebackend.exception.ThrowUtils;
@@ -114,8 +115,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "用户信息不存在或账号密码错误~");
         }
         // 用户信息存放到 Session 中
-        HttpSession session = request.getSession();
-        session.setAttribute(USER_LOGIN_STATE, user);
+        // HttpSession session = request.getSession();
+        // session.setAttribute(USER_LOGIN_STATE, user);
+        // Slp1 将用户状态信息添加到空间权限管理中
+        // 记录用户的登录态
+        request.getSession().setAttribute(USER_LOGIN_STATE, user);
+        // 记录用户登录态到 Sa-token，便于空间鉴权时使用，注意保证该用户信息与 SpringSession 中的信息过期时间一致
+        StpKit.SPACE.login(user.getId());
+        StpKit.SPACE.getSession().set(USER_LOGIN_STATE, user);
+
         // 返回脱敏后的用户信息
         return getLoginUserVO(user);
     }

@@ -11,6 +11,10 @@ import com.zqw.qwpicturebackend.api.aliyunai.model.GetOutPaintingTaskResponse;
 import com.zqw.qwpicturebackend.api.imagsearch.ImageSearchApiFacade;
 import com.zqw.qwpicturebackend.api.imagsearch.model.ImageSearchResult;
 import com.zqw.qwpicturebackend.api.imagsearch.picture.SearchPictureByPictureRequest;
+import com.zqw.qwpicturebackend.auth.SpaceUserAuthManager;
+import com.zqw.qwpicturebackend.auth.StpKit;
+import com.zqw.qwpicturebackend.auth.annotation.SaSpaceCheckPermission;
+import com.zqw.qwpicturebackend.auth.constant.SpaceUserPermissionConstant;
 import com.zqw.qwpicturebackend.common.BaseResult;
 import com.zqw.qwpicturebackend.common.DeleteRequest;
 import com.zqw.qwpicturebackend.common.ResultUtils;
@@ -58,6 +62,8 @@ public class PictureController {
 
     @Resource
     private AliYunAiApi aliYunAiApi;
+    @Autowired
+    private SpaceUserAuthManager spaceUserAuthManager;
 
     /**
      * 上传图片
@@ -68,6 +74,7 @@ public class PictureController {
      * @return 返回上传后脱敏的图片信息
      */
     @PostMapping("/upload")
+    @SaSpaceCheckPermission(SpaceUserPermissionConstant.PICTURE_UPLOAD)
     public BaseResult<PictureVO> uploadPicture(
             @RequestPart("file") MultipartFile multipartFile,
             PictureUploadRequest pictureUploadRequest,
@@ -85,6 +92,7 @@ public class PictureController {
      * @return 返回上传后脱敏的图片信息
      */
     @PostMapping("/upload/url")
+    @SaSpaceCheckPermission(SpaceUserPermissionConstant.PICTURE_UPLOAD)
     public BaseResult<PictureVO> uploadPictureByUrl(
             PictureUploadRequest pictureUploadRequest,
             HttpServletRequest request) {
@@ -102,6 +110,7 @@ public class PictureController {
      * @return 返回删除是否成功
      */
     @DeleteMapping("/delete")
+    @SaSpaceCheckPermission(SpaceUserPermissionConstant.PICTURE_DELETE)
     public BaseResult<Boolean> deletePicture(@RequestBody DeleteRequest deleteRequest,
                                              HttpServletRequest request) {
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
@@ -160,6 +169,7 @@ public class PictureController {
      * @return 是否成功修改
      */
     @PutMapping("/edit")
+    @SaSpaceCheckPermission(SpaceUserPermissionConstant.PICTURE_EDIT)
     public BaseResult<Boolean> editPicture(@RequestBody PictureEditRequest pictureEditRequest, HttpServletRequest request) {
         // 校验参数
         if (pictureEditRequest == null || pictureEditRequest.getId() <= 0) {
@@ -210,17 +220,24 @@ public class PictureController {
         User loginUser = userService.getLoginUser(request);
         // 只对私人空间进行校验
         Long spaceId = picture.getSpaceId();
-        if (spaceId != null) {
-            pictureService.checkPictureAuth(picture, loginUser);
-        }
+
+        // 已经设置为 sa-token 校验逻辑
+        // if (spaceId != null) {
+        //     pictureService.checkPictureAuth(picture, loginUser);
+        // }
         // if (!picture.getId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)){
         //     throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "你没有查询该图片的权限~");
         // }
-
+        if (spaceId != null) {
+            boolean access = StpKit.SPACE.hasPermission(SpaceUserPermissionConstant.PICTURE_VIEW);
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "没有查询权限");
+        }
         // 获取脱敏后的用户信息
         PictureVO pictureVO = PictureVO.objToVo(picture);
         // 添加冗余属性
         pictureVO.setUserVO(userService.getUserVO(loginUser));
+        Space space = spaceService.getById(spaceId);
+        pictureVO.setPermissionList(spaceUserAuthManager.getPermissionList(space, loginUser));
         return ResultUtils.success(pictureVO);
     }
 
@@ -272,7 +289,11 @@ public class PictureController {
             User loginUser = userService.getLoginUser(request);
             Space space = spaceService.getById(spaceId);
             ThrowUtils.throwif(space == null, ErrorCode.NOT_FOUND_ERROR, "没有查询的数据");
-            ThrowUtils.throwif(!loginUser.getId().equals(space.getUserId()), ErrorCode.NO_AUTH_ERROR, "没有操作当前空间的权限");
+            boolean access = StpKit.SPACE.hasPermission(SpaceUserPermissionConstant.PICTURE_VIEW);
+            if (!access){
+                throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "没有查询权限");
+            }
+            // ThrowUtils.throwif(!loginUser.getId().equals(space.getUserId()), ErrorCode.NO_AUTH_ERROR, "没有操作当前空间的权限");
         }
 
         Page<Picture> picturePage = pictureService.page(new Page<>(current, pageSize),
@@ -364,6 +385,7 @@ public class PictureController {
      * @return 返回查询到的最相近的图片集合
      */
     @PostMapping("/search/color")
+    @SaSpaceCheckPermission(SpaceUserPermissionConstant.PICTURE_VIEW)
     public BaseResult<List<PictureVO>> searchPictureByColor(@RequestBody SearchPictureByColorRequest searchPictureByColorRequest, HttpServletRequest request) {
         ThrowUtils.throwif(searchPictureByColorRequest == null, ErrorCode.PARAMS_ERROR);
         String picColor = searchPictureByColorRequest.getPicColor();
@@ -377,6 +399,7 @@ public class PictureController {
      * 创建 AI 扩图任务
      */
     @PostMapping("/out_painting/create_task")
+    @SaSpaceCheckPermission(SpaceUserPermissionConstant.PICTURE_EDIT)
     public BaseResult<CreateOutPaintingTaskResponse> createPictureOutPaintingTask(
             @RequestBody CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest,
             HttpServletRequest request) {

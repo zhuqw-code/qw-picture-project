@@ -554,7 +554,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         Picture picture = this.getById(picId);
         ThrowUtils.throwif(picture == null, ErrorCode.OPERATION_ERROR, "图片信息不存在~");
         // 只有本用户和管理员才能删除图片 todo【需要判断空间类型】
-        this.checkPictureAuth(picture, loginUser);
+        // 已经设置为sa-token校验逻辑
+        // this.checkPictureAuth(picture, loginUser);
         // if (!picture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
         //     throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "你没有删除该图片的权力~");
         // }
@@ -613,7 +614,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
         // 判断是图片归属者还是管理员 todo【添加上空间判断】
         // picture 属性拷贝后没有用户id，需要用含有id的对象来判断
-        this.checkPictureAuth(picture, loginUser);
+        // 已经设置为 sa-token 校验逻辑
+        // this.checkPictureAuth(picture, loginUser);
         // if (!oldPicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
         //     throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "你不能删除别人的图片或者你不是管理员~");
         // }
@@ -719,7 +721,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         Picture picture = Optional.ofNullable(this.getById(pictureId))
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_ERROR));
         // 权限校验
-        checkPictureAuth(picture, loginUser);
+        // 已经设置为 sa-token 校验逻辑了
+        // checkPictureAuth(picture, loginUser);
         // 构造请求参数
         CreateOutPaintingTaskRequest taskRequest = new CreateOutPaintingTaskRequest();
         CreateOutPaintingTaskRequest.Input input = new CreateOutPaintingTaskRequest.Input();
