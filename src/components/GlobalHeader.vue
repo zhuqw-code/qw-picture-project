@@ -5,7 +5,7 @@
       <a-col flex="250px">
         <div class="title-bar">
           <img class="logo" src="@/assets/logo.jpg" title="I AM BEAUTIFUL" />
-          <div class="title">智能云图库</div>
+          <div class="title" style="color: blue">智能云图库</div>
         </div>
       </a-col>
       <a-col flex="auto">
@@ -170,6 +170,23 @@ const goUserCenter = async () => {
 <style scoped>
 #global-header {
   margin-inline: -50px;
+  //background-image: linear-gradient(to top, #5ee7df 0%, #b490ca 100%);
+  backdrop-filter: blur(10px);
+}
+
+.title-bar {
+  display: flex;
+  align-items: center;
+}
+
+.title-bar .title {
+  color: #ffffff;
+}
+
+/* 让顶部菜单背景透明，避免白块突兀 */
+#global-header :deep(.ant-menu),
+#global-header :deep(.ant-menu-horizontal) {
+  background: transparent !important;
 }
 
 .title-bar .logo {
