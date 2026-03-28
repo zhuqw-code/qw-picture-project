@@ -230,12 +230,16 @@ public class PictureController {
         // }
         if (spaceId != null) {
             boolean access = StpKit.SPACE.hasPermission(SpaceUserPermissionConstant.PICTURE_VIEW);
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "没有查询权限");
+            if (!access){
+                throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "没有查询权限");
+            }
         }
         // 获取脱敏后的用户信息
         PictureVO pictureVO = PictureVO.objToVo(picture);
         // 添加冗余属性
-        pictureVO.setUserVO(userService.getUserVO(loginUser));
+        // 需要设置真实的创建人，而不是当前登录者
+        User pictureAuthor = userService.getById(picture.getUserId());
+        pictureVO.setUserVO(userService.getUserVO(pictureAuthor));
         Space space = spaceService.getById(spaceId);
         pictureVO.setPermissionList(spaceUserAuthManager.getPermissionList(space, loginUser));
         return ResultUtils.success(pictureVO);

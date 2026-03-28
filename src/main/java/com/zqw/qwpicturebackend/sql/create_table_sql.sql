@@ -1,11 +1,12 @@
-create database if not exists qw_picture default character set utf8mb4 collate utf8mb4_unicode_ci;
+create database `qw_picture`;
 
-use qw_picture;
+use `qw_picture`;
 
--- 用户表
-create table if not exists user
+-- auto-generated definition
+create table user
 (
-    id           bigint auto_increment comment 'id' primary key,
+    id           bigint auto_increment comment 'id'
+        primary key,
     userAccount  varchar(256)                           not null comment '账号',
     userPassword varchar(512)                           not null comment '密码',
     userName     varchar(256)                           null comment '用户昵称',
@@ -13,17 +14,18 @@ create table if not exists user
     userProfile  varchar(512)                           null comment '用户简介',
     userRole     varchar(256) default 'user'            not null comment '用户角色：user/admin',
     editTime     datetime     default CURRENT_TIMESTAMP not null comment '编辑时间',
-    -- 编辑时间是指用户正常发送请求信息修改的时间
     createTime   datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
     updateTime   datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
-    -- 修改时间是指直接对表进行修改会触发该字段的修改
     isDelete     tinyint      default 0                 not null comment '是否删除',
-    UNIQUE KEY uk_userAccount (userAccount),
-    INDEX idx_userName (userName)
-) comment '用户' collate = utf8mb4_unicode_ci;
+    constraint uk_userAccount
+        unique (userAccount)
+)
+    comment '用户' collate = utf8mb4_unicode_ci;
 
+create index idx_userName
+    on user (userName);
 
--- 图片表
+-- auto-generated definition
 create table picture
 (
     id            bigint auto_increment comment 'id'
@@ -46,7 +48,10 @@ create table picture
     reviewStatus  int      default 0                 not null comment '审核状态：0-待审核; 1-通过; 2-拒绝',
     reviewMessage varchar(512)                       null comment '审核信息',
     reviewerId    bigint                             null comment '审核人 ID',
-    reviewTime    datetime                           null comment '审核时间'
+    reviewTime    datetime                           null comment '审核时间',
+    thumbnailUrl  varchar(512)                       null comment '缩略图 url',
+    spaceId       bigint                             null comment '空间 id（为空表示公共空间）',
+    picColor      varchar(16)                        null comment '图片主色调'
 )
     comment '图片' collate = utf8mb4_unicode_ci;
 
@@ -62,26 +67,56 @@ create index idx_name
 create index idx_reviewStatus
     on picture (reviewStatus);
 
+create index idx_spaceId
+    on picture (spaceId);
+
 create index idx_tags
     on picture (tags);
 
 create index idx_userId
     on picture (userId);
 
-use qw_picture;
 
-ALTER TABLE picture
-    -- 添加新列
-    ADD COLUMN reviewStatus  INT DEFAULT 0 NOT NULL COMMENT '审核状态：0-待审核; 1-通过; 2-拒绝',
-    ADD COLUMN reviewMessage VARCHAR(512)  NULL COMMENT '审核信息',
-    ADD COLUMN reviewerId    BIGINT        NULL COMMENT '审核人 ID',
-    ADD COLUMN reviewTime    DATETIME      NULL COMMENT '审核时间';
+-- 空间表
+create table if not exists space
+(
+    id         bigint auto_increment comment 'id' primary key,
+    spaceName  varchar(128)                       null comment '空间名称',
+    spaceLevel int      default 0                 null comment '空间级别：0-普通版 1-专业版 2-旗舰版',
+    maxSize    bigint   default 0                 null comment '空间图片的最大总大小',
+    maxCount   bigint   default 0                 null comment '空间图片的最大数量',
+    totalSize  bigint   default 0                 null comment '当前空间下图片的总大小',
+    totalCount bigint   default 0                 null comment '当前空间下的图片数量',
+    userId     bigint                             not null comment '创建用户 id',
+    createTime datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    editTime   datetime default CURRENT_TIMESTAMP not null comment '编辑时间',
+    updateTime datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    isDelete   tinyint  default 0                 not null comment '是否删除',
+    -- 索引设计
+    index idx_userId (userId),        -- 提升基于用户的查询效率
+    index idx_spaceName (spaceName),  -- 提升基于空间名称的查询效率
+    index idx_spaceLevel (spaceLevel) -- 提升按空间级别查询的效率
+) comment '空间' collate = utf8mb4_unicode_ci;
 
--- 创建基于 reviewStatus 列的索引
-CREATE INDEX idx_reviewStatus ON picture (reviewStatus);
 
--- 为图片表添加图片主色调
-use qw_picture;
+ALTER TABLE space
+    ADD COLUMN spaceType int default 0 not null comment '空间类型：0-私有 1-团队';
 
-ALTER TABLE picture
-    ADD COLUMN picColor varchar(16) null comment '图片主色调';
+CREATE INDEX idx_spaceType ON space (spaceType);
+
+
+
+-- 空间成员表
+create table if not exists space_user
+(
+    id         bigint auto_increment comment 'id' primary key,
+    spaceId    bigint                                 not null comment '空间 id',
+    userId     bigint                                 not null comment '用户 id',
+    spaceRole  varchar(128) default 'viewer'          null comment '空间角色：viewer/editor/admin',
+    createTime datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    -- 索引设计
+    UNIQUE KEY uk_spaceId_userId (spaceId, userId), -- 唯一索引，用户在一个空间中只能有一个角色
+    INDEX idx_spaceId (spaceId),                    -- 提升按空间查询的性能
+    INDEX idx_userId (userId)                       -- 提升按用户查询的性能
+) comment '空间用户关联' collate = utf8mb4_unicode_ci;

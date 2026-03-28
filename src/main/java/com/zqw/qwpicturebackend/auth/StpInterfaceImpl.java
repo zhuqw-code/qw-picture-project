@@ -129,13 +129,20 @@ public class StpInterfaceImpl implements StpInterface {
             if (picture == null) {
                 throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "没有找到对应图片资源");
             }
-            // 公共空间，仅管理员和本人能够操作
-            if (picture.getUserId().equals(loginUser.getId()) || userService.isAdmin(loginUser)) {
-                return adminPermission;
-            } else {
-                // 公共空间图片，能够让非管理员和非本人用户查看
-                return spaceUserAuthManager.getPermissionsByRole(SpaceUserPermissionConstant.PICTURE_VIEW);
+            // 这里如果picture能够将spaceId携带回来我们还是能够判断当前用户是否有spaceId的权限【如果能够拿到直接跳出内层判断，交给外层去拿权限】
+            spaceId = picture.getSpaceId();
+
+            // 没有空间才当成公共空间操作
+            if (spaceId == null) {
+                // 公共空间，仅管理员和本人能够操作
+                if (picture.getUserId().equals(loginUser.getId()) || userService.isAdmin(loginUser)) {
+                    return adminPermission;
+                } else {
+                    // 公共空间图片，能够让非管理员和非本人用户查看
+                    return spaceUserAuthManager.getPermissionsByRole(SpaceUserPermissionConstant.PICTURE_VIEW);
+                }
             }
+            // 如果spaceId非空我们在外面判断
         }
         // 8. 根据获取的space返回对应权限【私有空间 / 团队空间】
         Space space = spaceService.getById(spaceId);
