@@ -1,6 +1,6 @@
 # 配置项目默认参数，端口号，添加上下文
 server:
-  port: 8124
+  port: 8123
   servlet:
     context-path: /api
     session:

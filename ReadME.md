@@ -63,3 +63,4 @@
 ## 6. 以及解决了，后端的knifine4j有密码导致无法使用 openapi 对接后端接口 + 分页后多个空白页问题
 > 分页后多个空白页：因为我们设置的pageSize大小是12，而pagination默认是10，但是我们没有在pagination中设置，就导致其按照10进行分页，导致多了一页
 
+# websocket操作
