@@ -29,14 +29,15 @@ import com.zqw.qwpicturebackend.model.entity.Space;
 import com.zqw.qwpicturebackend.model.entity.SpaceLevelEnum;
 import com.zqw.qwpicturebackend.model.entity.User;
 import com.zqw.qwpicturebackend.model.enums.PictureReviewStatusEnum;
+import com.zqw.qwpicturebackend.model.vo.PictureRankVO;
 import com.zqw.qwpicturebackend.model.vo.PictureTagCategory;
 import com.zqw.qwpicturebackend.model.vo.PictureVO;
+import com.zqw.qwpicturebackend.service.PictureLikeRankService;
 import com.zqw.qwpicturebackend.service.PictureService;
 import com.zqw.qwpicturebackend.service.SpaceService;
 import com.zqw.qwpicturebackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -62,7 +63,8 @@ public class PictureController {
 
     @Resource
     private AliYunAiApi aliYunAiApi;
-    @Autowired
+
+    @Resource
     private SpaceUserAuthManager spaceUserAuthManager;
 
     /**
@@ -423,5 +425,41 @@ public class PictureController {
         ThrowUtils.throwif(StrUtil.isBlank(taskId), ErrorCode.PARAMS_ERROR);
         GetOutPaintingTaskResponse task = aliYunAiApi.getOutPaintingTask(taskId);
         return ResultUtils.success(task);
+    }
+
+
+    @Resource
+    private PictureLikeRankService pictureLikeRankService;
+
+
+    /**
+     * 为图片点赞
+     */
+    @GetMapping("/favorite")
+    public BaseResult<String> clickAndFavorite(PictureClickRequest pictureClickRequest, HttpServletRequest request) {
+        ThrowUtils.throwif(pictureClickRequest == null, ErrorCode.PARAMS_ERROR, "请求参数错误");
+        // 1. 将对应图片的点赞记录加 1
+        Long pictureId = pictureClickRequest.getPictureId();
+        User loginUser = userService.getLoginUser(request);
+        if (loginUser == null) {  // 只有登录用户才能添加收藏
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        // 2. 更新数据库
+        pictureLikeRankService.increase(pictureId);
+        // 4. 响应
+        return ResultUtils.success(null , "助力成功");
+    }
+
+
+    @GetMapping("/list/favorite")
+    public BaseResult<List<PictureRankVO>> rankPicture(HttpServletRequest request) {
+        User loginUser = userService.getLoginUser(request);
+        if (loginUser == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        // 获取点赞数
+        List<PictureRankVO> pictureRankVOList = pictureLikeRankService.listRank();
+        return ResultUtils.success(pictureRankVOList);
     }
 }
