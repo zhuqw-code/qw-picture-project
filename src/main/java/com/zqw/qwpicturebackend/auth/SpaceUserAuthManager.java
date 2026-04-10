@@ -35,7 +35,7 @@ public class SpaceUserAuthManager {
     }
 
     /**
-     * 根据角色获取权限列表
+     * 专门为团队空间打造的权限获取方法【根据用户身份返回权限列表】
      */
     public List<String> getPermissionsByRole(String spaceUserRole) {
         if (StrUtil.isBlank(spaceUserRole)) {
@@ -52,6 +52,12 @@ public class SpaceUserAuthManager {
         return role.getPermissions();
     }
 
+    /**
+     *
+     * @param space
+     * @param loginUser
+     * @return
+     */
     public List<String> getPermissionList(Space space, User loginUser) {
         if (loginUser == null) {
             return new ArrayList<>();

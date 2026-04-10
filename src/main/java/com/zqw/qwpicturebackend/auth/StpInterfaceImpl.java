@@ -44,6 +44,18 @@ import static com.zqw.qwpicturebackend.constant.UserConstant.USER_LOGIN_STATE;
 
 /**
  * 自定义权限加载接口实现类
+ *
+ * @Configuration
+ * public class SaTokenAutoConfiguration {
+ *
+ *     // 【核心逻辑】Spring 会自动把容器中所有 StpInterface 的实现类注入进来
+ *     @Autowired(required = false)
+ *     public void setStpInterface(StpInterface stpInterface) {
+ *         // 如果找到了你写的实现类，就把它设置到 Sa-Token 的全局配置里
+ *         SaManager.setStpInterface(stpInterface);
+ *     }
+ * }
+ *
  */
 @Component    // 保证此类被 SpringBoot 扫描，完成 Sa-Token 的自定义权限验证扩展
 public class StpInterfaceImpl implements StpInterface {
